@@ -11,6 +11,7 @@ __pycache__/
 
 # Build artifacts
 dist/
+.dist/
 build/
 *.egg-info/
 
@@ -44,6 +45,9 @@ logs/
 .pytest_cache/
 htmlcov/
 .coverage
+
+# Runtime data
+data/sitelens_audit.db
 
 # Temporary files
 *.tmp
