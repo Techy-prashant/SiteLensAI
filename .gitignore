@@ -53,3 +53,7 @@ data/sitelens_audit.db
 *.tmp
 *.temp
 .pip_cache/
+
+# Admin Dashboard Frontend
+admin-dashboard/node_modules/
+admin-dashboard/.next/
