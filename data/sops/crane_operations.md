@@ -35,12 +35,12 @@ Before any crane operation begins, the following checks must be completed:
 - Ensure proper sling angles (minimum 60° from horizontal)
 - Use softeners at sharp edges to prevent sling damage
 
-### Lift Zone Safety
-- Establish a clear lift zone with barricades and signage
-- No personnel under suspended loads at any time
-- Signal person required when operator cannot see load
-- Use standard hand signals or radio communication
-- Crane operator has authority to stop any lift for safety concerns
+### Lift Zone Safety & Walkways
+- Establish clear walkways, barricades, and signage for workers.
+- **Normal Operations**: Cranes, tower cranes, or mobile cranes present in the background of a site while workers are walking or working in designated walkways wearing PPE (Hard Hats + Vests) is **STANDARD SAFE PRACTICE**.
+- **Overall Risk Level**: **NONE (Clear)**. Do NOT generate alerts or warnings for background cranes when workers are equipped with PPE and walking along site paths.
+- Only flag a hazard if an unhelmeted worker is standing directly under an active, unrigged swinging load.
+- Crane operator has authority to stop any lift for safety concerns.
 
 ### Overhead Power Lines
 - Maintain minimum clearance of 20 feet from power lines up to 350 kV

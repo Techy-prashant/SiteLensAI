@@ -60,19 +60,18 @@ class ClassificationResult:
 # ── Keyword → severity mappings ──────────────────────────────────────────
 
 CRITICAL_KEYWORDS = {
-    "crane", "overhead load", "swinging", "unharnessed", "unharness",
-    "no harness", "above 6", "high-voltage", "high voltage", "exposed wiring",
-    "trench collapse", "cave-in", "electrocution", "falling", "suspended load",
-    "collapse", "structural failure", "live wire", "power line",
-    "no fall protection", "open edge", "unguarded hole",
+    "crane", "overhead load", "swinging load", "unharnessed at height", "unharness at edge",
+    "no harness at unguarded edge", "above 6ft unguarded", "high-voltage", "high voltage", "exposed live wiring",
+    "trench collapse", "cave-in", "electrocution", "actively falling", "suspended load",
+    "structural collapse", "live wire", "power line contact",
+    "unguarded ledge", "unguarded drop", "no guardrail at height",
 }
 
 WARNING_KEYWORDS = {
     "missing", "no hard hat", "no helmet", "no safety glasses",
     "no gloves", "no hi-vis", "blocked exit", "improper storage",
     "housekeeping", "tripping", "wet floor", "fire extinguisher",
-    "unsecured", "ppe", "violation",
-    # PPE-specific absence phrases
+    "unsecured", "ppe", "violation", "near edge", "edge work",
     "without hard hat", "without helmet", "without vest", "without gloves",
     "without safety glasses", "without ppe", "bareheaded", "no vest",
     "no boots", "not wearing", "lacking ppe", "inadequate ppe",
@@ -106,10 +105,26 @@ class HazardClassifier:
 
     @staticmethod
     def _map_severity(raw_severity: str, description: str = "") -> SeverityLevel:
-        """Map raw severity string, with keyword-based override."""
+        """Map raw severity string, with keyword-based override and guardrail softening."""
         desc_lower = description.lower()
 
-        # Keyword override — promote to CRITICAL if life-risk keywords
+        # ── SOFTENER: If guardrails / barriers are present, NEVER allow CRITICAL ──
+        has_guardrail = any(g in desc_lower for g in ["guardrail", "guarded", "railing", "barrier", "parapet", "fence"])
+        if has_guardrail:
+            if "falling" not in desc_lower and "collapse" not in desc_lower:
+                return SeverityLevel.WARNING if "missing" in desc_lower else SeverityLevel.INFO
+
+        # ── SOFTENER: Standing/working near edge with no active fall -> WARNING/INFO, not CRITICAL ──
+        if ("near edge" in desc_lower or "at edge" in desc_lower or "edge" in desc_lower) and not ("falling" in desc_lower or "unharnessed" in desc_lower or "no guardrail" in desc_lower or "unguarded" in desc_lower):
+            raw = raw_severity.upper().strip()
+            return SeverityLevel.WARNING if raw in ("CRITICAL", "WARNING") else SeverityLevel.INFO
+
+        # ── SOFTENER: Missing safety glasses alone is NEVER CRITICAL ──
+        if "glasses" in desc_lower or "goggles" in desc_lower:
+            if not any(k in desc_lower for k in ["falling", "crane", "electrocution", "high voltage", "collapse"]):
+                return SeverityLevel.WARNING
+
+        # Keyword override — promote to CRITICAL only if true severe life-risk keywords
         for kw in CRITICAL_KEYWORDS:
             if kw in desc_lower:
                 return SeverityLevel.CRITICAL
@@ -118,10 +133,6 @@ class HazardClassifier:
         if raw == "CRITICAL":
             return SeverityLevel.CRITICAL
         if raw == "WARNING":
-            # Check if it should be upgraded
-            for kw in CRITICAL_KEYWORDS:
-                if kw in desc_lower:
-                    return SeverityLevel.CRITICAL
             return SeverityLevel.WARNING
         if raw == "INFO":
             return SeverityLevel.INFO
@@ -225,73 +236,42 @@ class HazardClassifier:
         """
         text = (ppe_compliance or "").lower().strip()
 
-        # ── Step 1: Check for EXPLICIT compliance confirmations ──
-        # These phrases mean the VLM is sure all PPE is worn correctly.
-        # Use word-boundary-safe substring matching.
-        COMPLIANT_PHRASES = [
-            "all workers wearing",
-            "wearing all required",
-            "all required ppe",
-            "full ppe compliance",
-            "properly equipped",
-            "full compliance",
-            "all ppe present",
-            "wearing hard hat and",
-            "wearing hi-vis",
-            "wearing safety vest",
-            "no ppe violations",
-            "all workers appear to be in compliance",
-        ]
-        for phrase in COMPLIANT_PHRASES:
-            if phrase in text:
-                logger.debug("PPE compliance confirmed via phrase: '%s'", phrase)
-                return None
-
-        # 'compliant' alone is positive ONLY if 'non-' does not precede it
-        import re as _re
-        if _re.search(r'(?<!non-)\bcompliant\b', text):
-            return None
-
-        # ── Step 2: If a person is visible — warn unless proven compliant ──
-        if worker_count > 0:
-            desc = ppe_compliance.strip() if ppe_compliance else "Worker(s) visible without confirmed PPE compliance"
-            logger.info(
-                "PPE WARNING: %d worker(s) visible, no explicit compliance confirmed. ppe_compliance='%s'",
-                worker_count,
-                ppe_compliance[:100] if ppe_compliance else "(empty)",
-            )
-            return DetectedHazard(
-                hazard_type=HazardType.PPE_BREACH,
-                description=desc,
-                location="visible worker(s)",
-                severity=SeverityLevel.WARNING,
-                worker_in_danger=False,
-            )
-
-        # ── Step 3: Even without worker_count, check explicit violation phrases ──
+        # ── Step 1: Check if negative violation words are present ──
         VIOLATION_PHRASES = [
             "not wearing", "missing", "no hard hat", "no helmet",
-            "no vest", "no hi-vis", "no gloves", "no safety glasses",
-            "without ppe", "without hard hat", "without helmet",
-            "bareheaded", "non-compliant", "lacks", "lacking",
-            "inadequate", "no protective", "unprotected", "no boots",
-            "without gloves", "without vest", "violation",
-            "no ppe", "no personal protective",
+            "no vest", "no hi-vis", "without ppe", "without hard hat",
+            "without helmet", "bareheaded", "non-compliant", "lacking ppe",
+            "inadequate ppe", "unprotected worker", "violation",
         ]
-        triggered = [p for p in VIOLATION_PHRASES if p in text]
-        if triggered:
-            desc = ppe_compliance.strip().rstrip(".")
-            logger.info(
-                "PPE hazard via explicit violation phrase(s) %s in: '%s'",
-                triggered[:3],
-                ppe_compliance[:80],
-            )
-            return DetectedHazard(
-                hazard_type=HazardType.PPE_BREACH,
-                description=desc,
-                location="visible worker(s)",
-                severity=SeverityLevel.WARNING,
-                worker_in_danger=False,
-            )
+        has_violation = any(vp in text for vp in VIOLATION_PHRASES)
 
-        return None
+        # ── Step 2: Positive PPE indicators ──
+        COMPLIANT_PHRASES = [
+            "all workers wearing", "wearing all required", "all required ppe",
+            "full ppe compliance", "properly equipped", "full compliance",
+            "all ppe present", "wearing hard hat", "wearing hi-vis",
+            "wearing safety vest", "wearing helmet", "wearing vests",
+            "hard hat", "helmet", "hi-vis", "safety vest", "reflective vest",
+            "no ppe violations", "compliant",
+        ]
+        has_positive = any(cp in text for cp in COMPLIANT_PHRASES)
+
+        # If positive terms exist and no explicit violation, or if text is empty/generic, consider COMPLIANT
+        if has_positive and not has_violation:
+            logger.debug("PPE compliant (positive phrases found, no violations): '%s'", text[:60])
+            return None
+
+        if not has_violation:
+            # Default to compliant when no explicit violations reported
+            return None
+
+        # ── Step 3: Only synthesize hazard if explicit violation confirmed ──
+        desc = ppe_compliance.strip() if ppe_compliance else "PPE non-compliance detected"
+        logger.info("PPE Breach confirmed via violation phrase in: '%s'", text[:100])
+        return DetectedHazard(
+            hazard_type=HazardType.PPE_BREACH,
+            description=desc,
+            location="visible worker(s)",
+            severity=SeverityLevel.WARNING,
+            worker_in_danger=False,
+        )

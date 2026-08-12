@@ -2,8 +2,13 @@
 SiteLens AI — /api/detect route
 
 Single-frame hazard detection endpoint.
-Accepts an uploaded image (or base64), runs the full pipeline
-(VLM → Classifier → RAG → Rule Engine → Alert → Audit), and returns structured JSON.
+Accepts an uploaded image (multipart), base64 form field, OR JSON body
+{"frame": "<Base64_JPEG>"} (required by the Android mobile client).
+
+Runs the full pipeline:
+  VLM → Classifier → RAG → Rule Engine → Alert → Audit
+
+Returns the mobile-contract HazardAlert JSON.
 """
 
 from __future__ import annotations
@@ -14,10 +19,12 @@ import logging
 import time
 from typing import Optional
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from pydantic import BaseModel
 
 from app.hazard.alert_formatter import AlertFormatter, HazardAlert
 from app.hazard.classifier import HazardClassifier
+from app.hazard.mobile_contract import normalize_for_mobile
 from app.hazard.prompt_engine import PromptEngine
 from app.hazard.safeguards import apply_safeguards
 
@@ -59,8 +66,18 @@ def set_audit_db(db):
     _audit_db = db
 
 
+# ── Pydantic model for JSON body (Android mobile client) ────────────────
+
+class FrameRequest(BaseModel):
+    """JSON request body accepted from the Android mobile client."""
+    frame: str  # Base64-encoded JPEG
+
+
+# ── Endpoint ─────────────────────────────────────────────────────────────
+
 @router.post("/detect", response_model=None)
 async def detect_hazards(
+    request: Request,
     image: Optional[UploadFile] = File(None),
     image_base64: Optional[str] = Form(None),
     worker_query: Optional[str] = Form(None),
@@ -70,17 +87,35 @@ async def detect_hazards(
 
     Full pipeline: VLM → Classifier → RAG → Rule Engine → Alert → Audit
 
-    Accepts either:
-      - `image`: multipart file upload (JPEG/PNG)
-      - `image_base64`: base64-encoded image string
+    Accepts (in priority order):
+      1. JSON body: {"frame": "<Base64_JPEG>"}  ← Android mobile client
+      2. Multipart upload: ``image`` file field
+      3. Multipart form:   ``image_base64`` field
 
-    Returns a HazardAlert JSON object.
+    Returns the mobile-contract HazardAlert JSON object.
     """
     if _vlm_engine is None:
         raise HTTPException(status_code=503, detail="VLM engine not initialized.")
 
     # ── 1. Get image bytes ──
-    if image is not None:
+    # Priority: JSON body (Android) > multipart file > multipart base64 form field
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        try:
+            body = await request.json()
+            frame_b64 = body.get("frame")
+            if not frame_b64:
+                raise HTTPException(status_code=400, detail="JSON body missing 'frame' field.")
+            try:
+                image_bytes = base64.b64decode(frame_b64 + "==" * (4 - len(frame_b64) % 4 or 4))
+            except Exception:
+                raise HTTPException(status_code=400, detail="Invalid base64 in 'frame' field.")
+            worker_query = body.get("worker_query")  # optional
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(status_code=400, detail="Malformed JSON body.")
+    elif image is not None:
         image_bytes = await image.read()
     elif image_base64 is not None:
         try:
@@ -90,7 +125,7 @@ async def detect_hazards(
     else:
         raise HTTPException(
             status_code=400,
-            detail="Provide either 'image' file or 'image_base64' field.",
+            detail="Provide JSON body {\"frame\":\"...\"}  or multipart 'image' / 'image_base64' field.",
         )
 
     if len(image_bytes) < 100:
@@ -182,5 +217,14 @@ async def detect_hazards(
         decision_info.decision.value if decision_info else "CLASSIFIER_ONLY",
     )
 
-    return result
+    # ── 8. Normalize to mobile contract ──
+    mobile_result = normalize_for_mobile(
+        result,
+        frame_number=0,  # single-shot — no frame sequence
+        processing_time_ms=round(vlm_time * 1000),
+        msg_type="alert",
+    )
+    import json as _json
+    logger.info("[POST /api/detect → client] %s", _json.dumps(mobile_result, indent=2))
+    return mobile_result
 

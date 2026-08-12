@@ -3,6 +3,12 @@ SiteLens AI — WebSocket frame streaming route
 
 Receives live camera frames over WebSocket, processes them through
 the full hazard detection pipeline, and pushes alerts back in real-time.
+
+Android Client Contract
+-----------------------
+Incoming : {"frame": "<Base64_JPEG>"}
+Outgoing  : HazardAlert JSON (see app.hazard.mobile_contract)
+Skip msg  : {"type": "frame_skipped", "frame_number": N}
 """
 
 from __future__ import annotations
@@ -14,11 +20,13 @@ import logging
 import time
 from typing import Optional
 
+import httpx
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from app.config import get_settings
 from app.hazard.alert_formatter import AlertFormatter
 from app.hazard.classifier import HazardClassifier
+from app.hazard.mobile_contract import frame_skipped_message, normalize_for_mobile
 from app.hazard.prompt_engine import PromptEngine
 from app.hazard.safeguards import apply_safeguards
 
@@ -88,20 +96,27 @@ async def websocket_stream(websocket: WebSocket):
     """
     WebSocket endpoint for real-time frame streaming.
 
-    Protocol:
-    - Client sends frames as base64-encoded JSON: {"frame": "<base64>"}
-    - Server responds with HazardAlert JSON for every processed frame
-    - Frame skip is controlled by config.frame_skip
+    Android Client Contract
+    -----------------------
+    Incoming: {"frame": "<Base64_JPEG>"}
+    Outgoing: HazardAlert JSON (mobile contract shape)
 
     The client can also send:
     - {"type": "query", "text": "..."} for worker audio queries
     - {"type": "ping"} for keepalive
+    Frame skip is controlled by config.frame_skip.
     """
-    if _vlm_engine is None:
-        await websocket.close(code=1013, reason="VLM engine not ready")
-        return
-
+    # Always accept first — allows Android to receive a useful error JSON
+    # rather than a raw TCP close if the VLM engine is still warming up.
     await manager.connect(websocket)
+
+    if _vlm_engine is None:
+        await websocket.send_json({
+            "type": "error",
+            "error": "VLM engine not ready — retrying in a moment.",
+        })
+        manager.disconnect(websocket)
+        return
     settings = get_settings()
     frame_counter = 0
     current_worker_query: Optional[str] = None  # holds the latest worker query for VLM
@@ -128,10 +143,9 @@ async def websocket_stream(websocket: WebSocket):
 
                 # Skip frames per config
                 if frame_counter % settings.frame_skip != 0:
-                    await websocket.send_json({
-                        "type": "frame_skipped",
-                        "frame_number": frame_counter,
-                    })
+                    skip_msg = frame_skipped_message(frame_counter)
+                    logger.info("[WS → client] %s", json.dumps(skip_msg))
+                    await websocket.send_json(skip_msg)
                     continue
 
                 try:
@@ -176,28 +190,61 @@ async def websocket_stream(websocket: WebSocket):
                     else:
                         alert = _alert_formatter.from_classification(classification)
 
-                    result = alert.to_dict()
-                    result = apply_safeguards(result)
-                    result["type"] = "alert"
-                    result["frame_number"] = frame_counter
-                    result["processing_time_ms"] = round((time.time() - start) * 1000)
+                    raw_result = alert.to_dict()
+                    raw_result = apply_safeguards(raw_result)
+                    # Inject rule-engine fields before normalisation
+                    processing_time = round((time.time() - start) * 1000)
 
-                    await websocket.send_json(result)
+                    mobile_result = normalize_for_mobile(
+                        raw_result,
+                        frame_number=frame_counter,
+                        processing_time_ms=processing_time,
+                        msg_type="alert",
+                    )
+
+                    logger.info(
+                        "[WS → client] frame=%d  payload=%s",
+                        frame_counter,
+                        json.dumps(mobile_result),
+                    )
+                    await websocket.send_json(mobile_result)
 
                     # Broadcast to all connections (e.g., supervisor dashboard)
                     if alert.escalate_to_supervisor:
                         await manager.broadcast({
+                            **mobile_result,
                             "type": "escalation",
-                            **result,
                         })
 
+                except httpx.HTTPStatusError as e:
+                    if e.response.status_code == 429:
+                        retry_after = int(e.response.headers.get("retry-after", 2))
+                        logger.warning(
+                            "Rate limited (429) on frame %d — backing off %ds",
+                            frame_counter, retry_after,
+                        )
+                        skip_msg = frame_skipped_message(frame_counter)
+                        logger.info("[WS → client] %s", json.dumps(skip_msg))
+                        await websocket.send_json(skip_msg)
+                        await asyncio.sleep(retry_after)
+                    else:
+                        logger.exception("HTTP error during frame processing")
+                        err_msg = {
+                            "type": "error",
+                            "error": f"Upstream API error: {e.response.status_code}",
+                            "frame_number": frame_counter,
+                        }
+                        logger.info("[WS → client] %s", json.dumps(err_msg))
+                        await websocket.send_json(err_msg)
                 except Exception as e:
                     logger.exception("Frame processing error")
-                    await websocket.send_json({
+                    err_msg = {
                         "type": "error",
                         "error": str(e),
                         "frame_number": frame_counter,
-                    })
+                    }
+                    logger.info("[WS → client] %s", json.dumps(err_msg))
+                    await websocket.send_json(err_msg)
 
             # ── Worker query ──
             elif msg.get("type") == "query":
