@@ -31,13 +31,15 @@ class MainActivity : ComponentActivity() {
                 val settingsRepo = SettingsRepository(applicationContext)
                 val apiService = SiteLensApiService(okHttpClient, json)
                 val wsClient = SiteLensWebSocketClient(okHttpClient, json)
-                return MainViewModel(settingsRepo, apiService, wsClient) as T
+                
+                return MainViewModel(settingsRepo, apiService, wsClient, applicationContext) as T
             }
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
         enableEdgeToEdge()
         setContent {
             SiteLensTheme {

@@ -13,8 +13,28 @@ import kotlinx.coroutines.launch
 class MainViewModel(
     private val settingsRepository: SettingsRepository,
     private val apiService: SiteLensApiService,
-    val webSocketClient: SiteLensWebSocketClient
+    val webSocketClient: SiteLensWebSocketClient,
+    applicationContext: android.content.Context
 ) : ViewModel() {
+
+    private val ttsHelper = TtsHelper(applicationContext)
+
+    init {
+        viewModelScope.launch {
+            webSocketClient.latestAlert.collect { alert ->
+                alert?.hazardsDetail?.let { hazards ->
+                    if (hazards.isNotBlank() && hazards != "No specific hazard detail.") {
+                        ttsHelper.speak(hazards)
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        ttsHelper.shutdown()
+    }
 
     val serverAddress = settingsRepository.serverAddress.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
     val username = settingsRepository.username.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
