@@ -1305,9 +1305,31 @@
                 audioEl.innerHTML = '<span style="color:var(--text-muted);font-style:italic;">No active alerts</span>';
             }
 
-            // Hazard list
-            const hazards = result.hazards_detail || [];
-            totalHazards += hazards.length;
+            // Hazard list robust normalization
+            let hazards = [];
+            if (Array.isArray(result.hazards_list) && result.hazards_list.length > 0) {
+                hazards = result.hazards_list;
+            } else if (Array.isArray(result.hazards_detail) && result.hazards_detail.length > 0) {
+                hazards = result.hazards_detail;
+            } else if (typeof result.hazards_detail === 'string' && result.hazards_detail.trim() && !result.hazards_detail.includes("No hazards detected")) {
+                hazards = [{
+                    type: result.hazard_type || 'General',
+                    description: result.hazards_detail,
+                    severity: (result.severity_level || 'INFO').toUpperCase(),
+                    location: 'Scene'
+                }];
+            } else if (result.hazard_detected) {
+                hazards = [{
+                    type: result.hazard_type || 'General',
+                    description: result.image_summary || 'Hazard detected in scene scan',
+                    severity: (result.severity_level || 'INFO').toUpperCase(),
+                    location: 'Scene'
+                }];
+            }
+
+            if (result.hazard_detected) {
+                totalHazards += hazards.length || 1;
+            }
             document.getElementById('hazardCount').textContent = totalHazards;
             document.getElementById('workerCount').textContent = result.worker_count || 0;
             document.getElementById('hazardBadge').textContent = hazards.length + ' found';

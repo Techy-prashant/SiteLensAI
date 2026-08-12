@@ -756,16 +756,16 @@
     "section": "Rigging Requirements"
   },
   {
-    "content": "- Establish clear walkways, barricades, and signage for workers. - **Normal Operations**: Cranes, tower cranes, or mobile cranes present in the background of a site while workers are walking or working in designated walkways wearing PPE (Hard Hats + Vests) is **STANDARD SAFE PRACTICE**. - **Overall Risk Level**: **NONE (Clear)**. Do NOT generate alerts or warnings for background cranes when workers are equipped with PPE and walking along site paths. - Only flag a hazard if an unhelmeted worker is standing directly under an active, unrigged swinging load. - Crane operator has authority to stop any lift for safety concerns.",
+    "content": "- Establish a clear lift zone with barricades and signage - No personnel under suspended loads at any time - Signal person required when operator cannot see load - Use standard hand signals or radio communication - Crane operator has authority to stop any lift for safety concerns",
     "metadata": {
       "source": "crane_operations.md",
-      "section": "Lift Zone Safety & Walkways",
+      "section": "Lift Zone Safety",
       "chunk_index": 0,
       "total_chunks": 1
     },
-    "chunk_id": "crane_operations_Lift Zone Safety & Walkways_0",
+    "chunk_id": "crane_operations_Lift Zone Safety_0",
     "source_file": "crane_operations.md",
-    "section": "Lift Zone Safety & Walkways"
+    "section": "Lift Zone Safety"
   },
   {
     "content": "- Maintain minimum clearance of 20 feet from power lines up to 350 kV - Contact utility company for de-energization if closer work is needed - Use a dedicated spotter when working near power lines - Ground the crane if contact is possible",
@@ -960,7 +960,7 @@
     "section": "General"
   },
   {
-    "content": "Each employee on a walking/working surface with an unprotected side or edge which is 6 feet (1.8 m) or more above a lower level shall be protected from falling by the use of guardrail systems, safety net systems, or personal fall arrest systems. **Guardrail Exemption**: When standard guardrails, perimeter barriers, or parapet walls are present, workers are fully permitted to stand, walk, and work near the edge. Personal fall arrest harnesses are NOT required when guardrail systems are in place. Standing or walking near an edge protected by guardrails is SAFE and COMPLIANT. It should be logged as a standard observation or low-priority notice (INFO or WARNING at most), NEVER as a CRITICAL emergency alert.",
+    "content": "Each employee on a walking/working surface with an unprotected side or edge which is 6 feet (1.8 m) or more above a lower level shall be protected from falling by the use of guardrail systems, safety net systems, or personal fall arrest systems. Workers on construction sites must be provided fall protection at elevations of 6 feet or more. This includes work on scaffolds, elevated platforms, rooftops, open-sided floors, and near excavations.",
     "metadata": {
       "source": "osha_fall_protection.md",
       "section": "General Requirements (1926.501)",
@@ -984,31 +984,31 @@
     "section": "General"
   },
   {
-    "content": "- Top edge height: 42 inches (\u00b13 inches) above walking/working level - Midrails installed at a height midway between top edge and walking/working surface - When guardrails are installed, workers may freely work near the perimeter without additional harness lanyards.",
+    "content": "- Top edge height: 42 inches (\u00b13 inches) above walking/working level - Midrails installed at a height midway between the top edge and walking/working surface - Must withstand 200 pounds of force applied in any outward or downward direction",
     "metadata": {
       "source": "osha_fall_protection.md",
-      "section": "Guardrail Systems (Primary Protection)",
+      "section": "Guardrail Systems",
       "chunk_index": 0,
       "total_chunks": 1
     },
-    "chunk_id": "osha_fall_protection_Guardrail Systems (Primary Protection)_0",
+    "chunk_id": "osha_fall_protection_Guardrail Systems_0",
     "source_file": "osha_fall_protection.md",
-    "section": "Guardrail Systems (Primary Protection)"
+    "section": "Guardrail Systems"
   },
   {
-    "content": "- Full body harness connected to anchorage point required ONLY on edges where no guardrail or barrier exists. - Anchorage must support at least 5,000 pounds per worker - Harness must be inspected before each use",
+    "content": "- Full body harness connected to anchorage point - Anchorage must support at least 5,000 pounds per worker - Total fall distance plus deceleration distance must not exceed the available free fall distance - Self-retracting lifelines must limit free fall to 2 feet or less - Harness must be inspected before each use",
     "metadata": {
       "source": "osha_fall_protection.md",
-      "section": "Personal Fall Arrest Systems (For Unguarded Edges Only)",
+      "section": "Personal Fall Arrest Systems",
       "chunk_index": 0,
       "total_chunks": 1
     },
-    "chunk_id": "osha_fall_protection_Personal Fall Arrest Systems (For Unguarded Edges Only)_0",
+    "chunk_id": "osha_fall_protection_Personal Fall Arrest Systems_0",
     "source_file": "osha_fall_protection.md",
-    "section": "Personal Fall Arrest Systems (For Unguarded Edges Only)"
+    "section": "Personal Fall Arrest Systems"
   },
   {
-    "content": "- Installed as close as practicable under the walking/working surface when guardrails are unfeasible.",
+    "content": "- Installed as close as practicable under the walking/working surface - Maximum distance below: 30 feet - Must extend outward from the outermost projection of the work surface",
     "metadata": {
       "source": "osha_fall_protection.md",
       "section": "Safety Net Systems",
@@ -1020,19 +1020,79 @@
     "section": "Safety Net Systems"
   },
   {
-    "content": "- **SAFE / INFO**: Worker standing or working near an edge where guardrails, safety netting, or perimeter railings are installed. No harness needed. - **WARNING / ALERT**: Worker near an edge where guardrails are partially installed or undergoing setup, or minor perimeter observations. Alert the worker gently. - **CRITICAL**: Worker actively leaning over an UNGUARDED edge (no railing, no barrier) at height over 6 feet without any harness, or an active fall in progress.",
+    "content": "Employers must provide training for each employee who might be exposed to fall hazards. Training must include: 1. Nature of fall hazards in the work area 2. Correct procedures for erecting, maintaining, disassembling, and inspecting fall protection systems 3. Use and operation of guardrail systems, personal fall arrest systems, safety net systems, and other protection methods 4. Role of each employee in the safety monitoring system",
     "metadata": {
       "source": "osha_fall_protection.md",
-      "section": "Hazard Classification Criteria for Edges",
+      "section": "Training Requirements (1926.503)",
       "chunk_index": 0,
       "total_chunks": 1
     },
-    "chunk_id": "osha_fall_protection_Hazard Classification Criteria for Edges_0",
+    "chunk_id": "osha_fall_protection_Training Requirements (1926.503)_0",
     "source_file": "osha_fall_protection.md",
-    "section": "Hazard Classification Criteria for Edges"
+    "section": "Training Requirements (1926.503)"
   },
   {
-    "content": "In the event of a fall: 1. Activate emergency response immediately (call 911) 2. Do NOT move the fallen worker unless there is immediate danger 3. Provide first aid while waiting for emergency services 4. Secure the area to prevent additional falls",
+    "content": "## Common Fall Hazards on Construction Sites",
+    "metadata": {
+      "source": "osha_fall_protection.md",
+      "section": "General",
+      "chunk_index": 0,
+      "total_chunks": 1
+    },
+    "chunk_id": "osha_fall_protection_General_0",
+    "source_file": "osha_fall_protection.md",
+    "section": "General"
+  },
+  {
+    "content": "Workers at leading edges (the edge of a floor, roof, or formwork that changes location as additional sections are placed) must use fall protection.",
+    "metadata": {
+      "source": "osha_fall_protection.md",
+      "section": "Leading Edges",
+      "chunk_index": 0,
+      "total_chunks": 1
+    },
+    "chunk_id": "osha_fall_protection_Leading Edges_0",
+    "source_file": "osha_fall_protection.md",
+    "section": "Leading Edges"
+  },
+  {
+    "content": "Floor holes through which a person can fall must be guarded by a cover or guardrail system. Wall openings from which there is a drop of more than 6 feet must be guarded.",
+    "metadata": {
+      "source": "osha_fall_protection.md",
+      "section": "Holes and Openings",
+      "chunk_index": 0,
+      "total_chunks": 1
+    },
+    "chunk_id": "osha_fall_protection_Holes and Openings_0",
+    "source_file": "osha_fall_protection.md",
+    "section": "Holes and Openings"
+  },
+  {
+    "content": "Fall protection is required for scaffolds more than 10 feet above a lower level. Guardrails and/or personal fall arrest systems must be used.",
+    "metadata": {
+      "source": "osha_fall_protection.md",
+      "section": "Scaffolding",
+      "chunk_index": 0,
+      "total_chunks": 1
+    },
+    "chunk_id": "osha_fall_protection_Scaffolding_0",
+    "source_file": "osha_fall_protection.md",
+    "section": "Scaffolding"
+  },
+  {
+    "content": "Workers on low-slope roofs with unprotected sides and edges 6 feet or more above lower levels must have fall protection. Warning line systems may be used in combination with other systems.",
+    "metadata": {
+      "source": "osha_fall_protection.md",
+      "section": "Roofing Work",
+      "chunk_index": 0,
+      "total_chunks": 1
+    },
+    "chunk_id": "osha_fall_protection_Roofing Work_0",
+    "source_file": "osha_fall_protection.md",
+    "section": "Roofing Work"
+  },
+  {
+    "content": "In the event of a fall: 1. Activate emergency response immediately (call 911) 2. Do NOT move the fallen worker unless there is immediate danger 3. Provide first aid while waiting for emergency services 4. Secure the area to prevent additional falls 5. Report the incident to the site supervisor and safety officer 6. Document the incident including conditions, equipment used, and witnesses",
     "metadata": {
       "source": "osha_fall_protection.md",
       "section": "Emergency Response",
@@ -1044,19 +1104,19 @@
     "section": "Emergency Response"
   },
   {
-    "content": "- **FULL PPE COMPLIANCE = SAFE & CLEAR**: When workers are wearing hard hats and high-visibility safety vests, and walking or working in designated site walkways/areas, the scene is **SAFE AND COMPLIANT**. - **Overall Risk Level**: **NONE (Clear)**. No hazard alerts or warnings should be generated. - **Background Machinery & Scaffolding**: Cranes, scaffolding, building structures, red barricades, or caution signage in the background during normal site walk is standard, safe construction practice. If workers wear hard hats and hi-vis vests, NO issue or warning is raised.",
+    "content": "# Personal Protective Equipment (PPE) Requirements \u2014 Construction Sites",
     "metadata": {
       "source": "ppe_requirements.md",
-      "section": "Full PPE Compliance & Normal Site Activity (CLEAR / NO ISSUE)",
+      "section": "General",
       "chunk_index": 0,
       "total_chunks": 1
     },
-    "chunk_id": "ppe_requirements_Full PPE Compliance & Normal Site Activity (CLEAR / NO ISSUE)_0",
+    "chunk_id": "ppe_requirements_General_0",
     "source_file": "ppe_requirements.md",
-    "section": "Full PPE Compliance & Normal Site Activity (CLEAR / NO ISSUE)"
+    "section": "General"
   },
   {
-    "content": "Every worker entering a construction site must wear the following minimum PPE at all times: 1. **Hard Hat (ANSI Z89.1 Class E or G)** - Must be worn at all times on the construction site - Replace immediately if cracked, dented, or damaged 2. **High-Visibility Vest (ANSI/ISEA 107 Class 2 or 3)** - Required in all active site areas - Must be clean and reflective strips visible 3. **Safety Boots (ASTM F2413)** - Steel-toe or composite-toe boots required 4. **Safety Glasses (ANSI Z87.1)** - Required during active grinding, cutting, or drilling. Optional/recommended during general walking or standing. Missing safety glasses during general walking is NOT a hazard. 5. **Work Gloves** - Recommended for handling materials or tools. Missing gloves during walking is NOT a hazard.",
+    "content": "Every worker entering a construction site must wear the following minimum PPE at all times: 1. **Hard Hat (ANSI Z89.1 Class E or G)** - Must be worn at all times on the construction site - Replace immediately if cracked, dented, or damaged - Do not drill holes or modify the shell - Replace every 5 years or per manufacturer recommendation 2. **Safety Glasses (ANSI Z87.1)** - Impact-resistant lenses required for all site work - Side shields required in areas with flying debris - Prescription safety glasses must meet ANSI Z87.1 standards 3. **High-Visibility Vest (ANSI/ISEA 107 Class 2 or 3)** - Required in all areas where vehicle or equipment traffic is present - Class 3 required for roadwork and low-visibility conditions - Must be clean and reflective strips must be visible 4. **Safety Boots (ASTM F2413)** - Steel-toe or composite-toe boots required - Puncture-resistant sole - Must be laced and in good condition - Electrical hazard (EH) rated boots required near electrical work 5. **Work Gloves** - Appropriate to the task being performed - Cut-resistant gloves for handling sharp materials - Chemical-resistant gloves for handling hazardous substances - Insulated gloves for electrical work",
     "metadata": {
       "source": "ppe_requirements.md",
       "section": "Mandatory PPE for All Workers",

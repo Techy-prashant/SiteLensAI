@@ -16,12 +16,17 @@ import io
 import json
 import sys
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
+
 import httpx
 import websockets
 
 # ── Config ─────────────────────────────────────────────────────────────
-BASE_URL  = "http://localhost:8000"
-WS_URL    = "ws://localhost:8000/ws/stream"
+BASE_URL  = "http://127.0.0.1:8000"
+WS_URL    = "ws://127.0.0.1:8000/ws/stream"
 # ────────────────────────────────────────────────────────────────────────
 
 

@@ -64,7 +64,7 @@ async def get_alerts(
     alerts = list(_alert_history)
 
     if severity:
-        alerts = [a for a in alerts if a.get("severity_level") == severity.upper()]
+        alerts = [a for a in alerts if a.get("severity_level", "").lower() == severity.lower()]
 
     return {
         "alerts": alerts[:limit],

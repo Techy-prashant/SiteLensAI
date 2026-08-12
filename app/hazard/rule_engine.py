@@ -169,16 +169,20 @@ class RuleEngine:
             "temperature": 0.2,
         }
 
-        resp = await self._client.post(
-            self._api_url,
-            headers={
-                "Authorization": f"Bearer {self._api_key}",
-                "Content-Type": "application/json",
-            },
-            json=payload,
-        )
-        resp.raise_for_status()
-        data = resp.json()
+        try:
+            resp = await self._client.post(
+                self._api_url,
+                headers={
+                    "Authorization": f"Bearer {self._api_key}",
+                    "Content-Type": "application/json",
+                },
+                json=payload,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+        except httpx.HTTPStatusError as e:
+            logger.warning("LLM reasoning HTTP error %s — using deterministic rule engine.", e.response.status_code)
+            return None
 
         raw_text = data["choices"][0]["message"]["content"]
 

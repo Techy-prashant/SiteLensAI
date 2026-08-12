@@ -2,13 +2,8 @@
 SiteLens AI — /api/detect route
 
 Single-frame hazard detection endpoint.
-Accepts an uploaded image (multipart), base64 form field, OR JSON body
-{"frame": "<Base64_JPEG>"} (required by the Android mobile client).
-
-Runs the full pipeline:
-  VLM → Classifier → RAG → Rule Engine → Alert → Audit
-
-Returns the mobile-contract HazardAlert JSON.
+Accepts an uploaded image (or base64), runs the full pipeline
+(VLM → Classifier → RAG → Rule Engine → Alert → Audit), and returns structured JSON.
 """
 
 from __future__ import annotations
@@ -19,12 +14,10 @@ import logging
 import time
 from typing import Optional
 
-from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
-from pydantic import BaseModel
+from fastapi import APIRouter, Body, File, Form, HTTPException, UploadFile
 
 from app.hazard.alert_formatter import AlertFormatter, HazardAlert
 from app.hazard.classifier import HazardClassifier
-from app.hazard.mobile_contract import normalize_for_mobile
 from app.hazard.prompt_engine import PromptEngine
 from app.hazard.safeguards import apply_safeguards
 
@@ -66,14 +59,7 @@ def set_audit_db(db):
     _audit_db = db
 
 
-# ── Pydantic model for JSON body (Android mobile client) ────────────────
-
-class FrameRequest(BaseModel):
-    """JSON request body accepted from the Android mobile client."""
-    frame: str  # Base64-encoded JPEG
-
-
-# ── Endpoint ─────────────────────────────────────────────────────────────
+from fastapi import APIRouter, Body, File, Form, HTTPException, Request, UploadFile
 
 @router.post("/detect", response_model=None)
 async def detect_hazards(
@@ -87,45 +73,40 @@ async def detect_hazards(
 
     Full pipeline: VLM → Classifier → RAG → Rule Engine → Alert → Audit
 
-    Accepts (in priority order):
-      1. JSON body: {"frame": "<Base64_JPEG>"}  ← Android mobile client
-      2. Multipart upload: ``image`` file field
-      3. Multipart form:   ``image_base64`` field
+    Accepts:
+      - `image`: multipart file upload (JPEG/PNG)
+      - `image_base64`: base64-encoded image string (Form or JSON)
+      - `frame`: base64-encoded image string in JSON body
 
-    Returns the mobile-contract HazardAlert JSON object.
+    Returns a HazardAlert JSON object.
     """
     if _vlm_engine is None:
         raise HTTPException(status_code=503, detail="VLM engine not initialized.")
 
-    # ── 1. Get image bytes ──
-    # Priority: JSON body (Android) > multipart file > multipart base64 form field
     content_type = request.headers.get("content-type", "")
-    if "application/json" in content_type:
+    if "application/json" in content_type or (image is None and image_base64 is None):
         try:
             body = await request.json()
-            frame_b64 = body.get("frame")
-            if not frame_b64:
-                raise HTTPException(status_code=400, detail="JSON body missing 'frame' field.")
-            try:
-                image_bytes = base64.b64decode(frame_b64 + "==" * (4 - len(frame_b64) % 4 or 4))
-            except Exception:
-                raise HTTPException(status_code=400, detail="Invalid base64 in 'frame' field.")
-            worker_query = body.get("worker_query")  # optional
-        except HTTPException:
-            raise
+            if isinstance(body, dict):
+                image_base64 = image_base64 or body.get("image_base64") or body.get("frame")
+                worker_query = worker_query or body.get("worker_query")
         except Exception:
-            raise HTTPException(status_code=400, detail="Malformed JSON body.")
-    elif image is not None:
+            pass
+
+    # ── 1. Get image bytes ──
+    if image is not None:
         image_bytes = await image.read()
     elif image_base64 is not None:
         try:
+            if "," in image_base64:
+                image_base64 = image_base64.split(",", 1)[1]
             image_bytes = base64.b64decode(image_base64)
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid base64 image data.")
     else:
         raise HTTPException(
             status_code=400,
-            detail="Provide JSON body {\"frame\":\"...\"}  or multipart 'image' / 'image_base64' field.",
+            detail="Provide either 'image' file, 'image_base64' or 'frame' field.",
         )
 
     if len(image_bytes) < 100:
@@ -190,41 +171,40 @@ async def detect_hazards(
     if sop_reference and not alert.sop_reference:
         alert.sop_reference = sop_reference
 
-    # ── 6. Apply ethical AI safeguards ──
+    # ── 6. Apply ethical AI safeguards & Normalize for Mobile Contract ──
     result = alert.to_dict()
     result = apply_safeguards(result)
 
-    # Add metadata
-    result["processing_time_ms"] = round(vlm_time * 1000)
     result["raw_model_response"] = vlm_output.get("raw_model_response", "")
     if decision_info:
         result["decision"] = decision_info.decision.value
         result["decision_reasoning"] = decision_info.reasoning
         result["rule_engine_latency_ms"] = decision_info.latency_ms
 
+    from app.hazard.mobile_contract import normalize_for_mobile
+    mobile_alert = normalize_for_mobile(
+        result,
+        frame_number=1,
+        processing_time_ms=round(vlm_time * 1000),
+    )
+
+    # Record alert for live dashboard stream & history
+    from app.routes.alerts import record_alert
+    record_alert(mobile_alert)
+
     # ── 7. Audit logging ──
-    if _audit_db and result.get("hazard_detected"):
+    if _audit_db and mobile_alert.get("hazard_detected"):
         try:
-            await _audit_db.log_incident(result)
+            await _audit_db.log_incident(mobile_alert)
         except Exception as e:
             logger.warning("Audit logging failed: %s", e)
 
     logger.info(
-        "Detection complete: severity=%s, hazards=%d, time=%.1fs, decision=%s",
-        alert.severity_level,
-        len(alert.hazards_detail),
+        "Detection complete: severity=%s, time=%.1fs, decision=%s",
+        mobile_alert.get("severity_level"),
         vlm_time,
-        decision_info.decision.value if decision_info else "CLASSIFIER_ONLY",
+        mobile_alert.get("decision"),
     )
 
-    # ── 8. Normalize to mobile contract ──
-    mobile_result = normalize_for_mobile(
-        result,
-        frame_number=0,  # single-shot — no frame sequence
-        processing_time_ms=round(vlm_time * 1000),
-        msg_type="alert",
-    )
-    import json as _json
-    logger.info("[POST /api/detect → client] %s", _json.dumps(mobile_result, indent=2))
-    return mobile_result
+    return mobile_alert
 

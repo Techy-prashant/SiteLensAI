@@ -43,6 +43,8 @@ def chunk_text(
     chunk_size : target tokens per chunk
     overlap : tokens of overlap between consecutive chunks
     """
+    chunk_size = int(chunk_size)
+    overlap = int(overlap)
     words = text.split()
     chunks = []
     start = 0

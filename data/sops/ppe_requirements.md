@@ -1,8 +1,4 @@
-## Full PPE Compliance & Normal Site Activity (CLEAR / NO ISSUE)
-
-- **FULL PPE COMPLIANCE = SAFE & CLEAR**: When workers are wearing hard hats and high-visibility safety vests, and walking or working in designated site walkways/areas, the scene is **SAFE AND COMPLIANT**.
-- **Overall Risk Level**: **NONE (Clear)**. No hazard alerts or warnings should be generated.
-- **Background Machinery & Scaffolding**: Cranes, scaffolding, building structures, red barricades, or caution signage in the background during normal site walk is standard, safe construction practice. If workers wear hard hats and hi-vis vests, NO issue or warning is raised.
+# Personal Protective Equipment (PPE) Requirements — Construction Sites
 
 ## Mandatory PPE for All Workers
 
@@ -11,19 +7,30 @@ Every worker entering a construction site must wear the following minimum PPE at
 1. **Hard Hat (ANSI Z89.1 Class E or G)**
    - Must be worn at all times on the construction site
    - Replace immediately if cracked, dented, or damaged
+   - Do not drill holes or modify the shell
+   - Replace every 5 years or per manufacturer recommendation
 
-2. **High-Visibility Vest (ANSI/ISEA 107 Class 2 or 3)**
-   - Required in all active site areas
-   - Must be clean and reflective strips visible
+2. **Safety Glasses (ANSI Z87.1)**
+   - Impact-resistant lenses required for all site work
+   - Side shields required in areas with flying debris
+   - Prescription safety glasses must meet ANSI Z87.1 standards
 
-3. **Safety Boots (ASTM F2413)**
+3. **High-Visibility Vest (ANSI/ISEA 107 Class 2 or 3)**
+   - Required in all areas where vehicle or equipment traffic is present
+   - Class 3 required for roadwork and low-visibility conditions
+   - Must be clean and reflective strips must be visible
+
+4. **Safety Boots (ASTM F2413)**
    - Steel-toe or composite-toe boots required
-
-4. **Safety Glasses (ANSI Z87.1)**
-   - Required during active grinding, cutting, or drilling. Optional/recommended during general walking or standing. Missing safety glasses during general walking is NOT a hazard.
+   - Puncture-resistant sole
+   - Must be laced and in good condition
+   - Electrical hazard (EH) rated boots required near electrical work
 
 5. **Work Gloves**
-   - Recommended for handling materials or tools. Missing gloves during walking is NOT a hazard.
+   - Appropriate to the task being performed
+   - Cut-resistant gloves for handling sharp materials
+   - Chemical-resistant gloves for handling hazardous substances
+   - Insulated gloves for electrical work
 
 ## Task-Specific PPE
 

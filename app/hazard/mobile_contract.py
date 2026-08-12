@@ -237,6 +237,9 @@ def normalize_for_mobile(
         image_summary,
     )
 
+    raw_hazards_detail = result.get("hazards_detail", [])
+    hazards_list = raw_hazards_detail if isinstance(raw_hazards_detail, list) else []
+
     return {
         "type":               msg_type,
         "frame_number":       frame_number,
@@ -245,9 +248,16 @@ def normalize_for_mobile(
         "severity_level":     severity_lc,
         "image_summary":      image_summary,
         "hazards_detail":     hazards_detail,
+        "hazards_list":       hazards_list,
         "sop_reference":      sop_reference,
         "decision":           decision,
         "decision_reasoning": reason,
+        "scene_description":  _strip_think(str(result.get("scene_description") or "")),
+        "raw_model_response": result.get("raw_model_response") or result.get("scene_description") or "",
+        "worker_count":       result.get("worker_count", 0),
+        "audio_alert_text":   result.get("audio_alert_text", ""),
+        "hud_display_card":   result.get("hud_display_card", ""),
+        "recommended_action": result.get("recommended_action", ""),
     }
 
 

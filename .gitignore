@@ -52,3 +52,4 @@ data/sitelens_audit.db
 # Temporary files
 *.tmp
 *.temp
+.pip_cache/
