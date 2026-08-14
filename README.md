@@ -158,8 +158,7 @@ GET /health
 ```
 
 Response:
-```bash
-JSON
+```JSON
 {
   "status": "healthy",
   "vlm_backend": "grok",
@@ -182,8 +181,7 @@ Content-Type: application/json
 ```
 
 Response (200 OK):
-```bash
-JSON
+```JSON
 {
   "type": "alert",
   "frame_number": 42,
@@ -198,8 +196,7 @@ JSON
 ```
 
 * Real-Time Streaming (WebSocket)
-```bash
-JavaScript
+```JavaScript
 const ws = new WebSocket('ws://localhost:8000/ws/stream');
 ws.onopen = () => {
   ws.send(JSON.stringify({ frame: '<base64>' }));
@@ -223,8 +220,7 @@ Content-Type: application/json
 ```
 
 Response:
-```bash
-JSON
+```JSON
 {
   "results": [
     {
@@ -247,8 +243,7 @@ Content-Type: audio/wav
 ```
 
 Response:
-```bash
-JSON
+```JSON
 {
   "transcription": "What should I do if I see a trench without shoring?",
   "intent": "safety_procedure",
@@ -263,8 +258,7 @@ GET /api/audit/incidents?start_time=2026-08-14T10:00:00Z&end_time=2026-08-14T18:
 ```
 
 Response:
-```bash
-JSON
+```JSON
 {
   "total": 12,
   "incidents": [
@@ -481,7 +475,7 @@ Key Metrics to Monitor
 * Monitor network round-trip time
 
 ## 📄 LicenseMIT 
-License — See LICENSE for details.
+License — See LICENSE for details
 
 ---
 
